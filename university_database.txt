@@ -1,0 +1,107 @@
+USE university_database; 
+
+
+	-- script that populates all of the database tables with sample data 
+INSERT INTO students (students_id, students_name, students_email) 
+VALUES
+    (1, 'Eider', 'eider@uni.com'),
+    (2, 'Jone', 'jone@uni.com'),
+    (3, 'Kerman', 'kerman@uni.com'),
+    (4, 'Edu', 'edu@uni.com');
+
+INSERT INTO professors (professors_id, professors_name)
+VALUES
+    (1, 'Professor Suso'),
+    (2, 'Professor Gonzalez'),
+    (3, 'Professor Lanz');
+
+
+INSERT INTO courses (courses_id, courses_name, courses_professors_id) 
+VALUES
+    (101, 'Mathematics', 1),
+    (102, 'History', 2),
+    (103, 'Art', 3),
+    (104, 'Literature', 3);
+
+INSERT INTO grades (grades_id, grades_students_id, grades_courses_id, grades_grade) 
+VALUES
+    (1, 1, 102, 90.5),
+    (2, 1, 103, 85.0),
+    (3, 1, 104, 78.3),
+    (4, 2, 101, 88.2),
+    (5, 2, 102, 92.7),
+    (6, 3, 101, 75.8),
+	(7, 3, 102, 80.0),
+    (8, 3, 103, 65.0),
+    (9, 3, 104, 85.5),
+    (10, 4, 102, 90.0),
+    (11, 4, 103, 82.5);
+   
+
+	-- showing data of the 4 tables
+
+SELECT * 
+FROM students;
+    
+SELECT * 
+FROM professors;
+
+SELECT *
+FROM courses;
+
+SELECT *
+FROM grades;
+
+	-- The average grade that is given by each professor
+SELECT 
+p.professors_name AS Professor, 
+AVG(g.grades_grade) AS AverageGrade
+FROM professors p
+JOIN courses c ON p.professors_id = c.courses_professors_id
+JOIN grades g ON c.courses_id = g.grades_courses_id
+GROUP BY p.professors_name;
+
+	-- The top grades for each student
+SELECT 
+s.students_name AS Student, 
+c.courses_name AS Course, 
+g.grades_grade AS Grade
+FROM students s
+JOIN grades g ON s.students_id = g.grades_students_id
+JOIN courses c ON g.grades_courses_id = c.courses_id
+WHERE g.grades_grade = (
+    SELECT MAX(grades_grade) FROM grades WHERE grades_students_id = s.students_id
+);
+
+
+	-- Sort students by the courses that they are enrolled in
+SELECT s.students_name AS Student, 
+GROUP_CONCAT(c.courses_name ORDER BY c.courses_name ASC) AS EnrolledCourses
+FROM students s
+JOIN grades g ON s.students_id = g.grades_students_id
+JOIN courses c ON g.grades_courses_id = c.courses_id
+GROUP BY s.students_name;
+
+
+	-- Summary report of courses and their average grades, sorted by the most challenging course (course with the lowest average grade) to the easiest course
+SELECT c.courses_name, 
+AVG(g.grades_grade) AS AverageGrade
+FROM courses c
+JOIN grades g ON c.courses_id = g.grades_courses_id
+GROUP BY c.courses_name
+ORDER BY AverageGrade ASC;
+
+
+	-- Finding which student and professor have the most courses in common
+SELECT 
+s.students_name AS Student, 
+p.professors_name AS Professor, 
+COUNT(*) AS CommonCourses
+FROM students s
+JOIN grades g ON s.students_id = g.grades_students_id
+JOIN courses c ON g.grades_courses_id = c.courses_id
+JOIN professors p ON c.courses_professors_id = p.professors_id
+GROUP BY s.students_name, p.professors_name
+ORDER BY CommonCourses DESC
+LIMIT 1;
+
