@@ -1,4 +1,4 @@
-USE university_database; 
+USE university_data; 
 
 
 	-- script that populates all of the database tables with sample data 
